@@ -1,0 +1,10 @@
+
+PATIENT_NO,SITE_NO,EVENT_NO,EVENT_DESCRIPTION,SEVERITY,RELATEDNESS,SERIOUS_EVENT,START_DATE,END_DATE,OUTCOME
+001,1001,1,Nausea,Mild,Related,No,2025-01-12,2025-01-14,Recovered
+001,1001,2,Fatigue,Moderate,Related,No,2025-01-15,2025-01-20,Recovered
+002,1001,1,Rash,Mild,Not Related,No,2025-01-18,2025-01-22,Recovered
+003,1002,1,Neutropenia,Severe,Related,Yes,2025-01-20,,Not Recovered
+004,1002,1,Diarrhea,Moderate,Related,No,2025-01-21,2025-01-25,Recovered
+005,1003,1,Headache,Mild,Not Related,No,2025-01-22,2025-01-23,Recovered
+006,1003,1,Anemia,Moderate,Related,No,2025-01-24,,Ongoing
+007,1004,1,Vomiting,Mild,Related,No,2025-01-26,2025-01-27,Recovered
