@@ -1,0 +1,10 @@
+
+PATIENT_NO,SITE_NO,SCAN_DATE,VISIT_NAME,LESION_CATEGORY,OVERALL_RESPONSE,RESPONSE_CRITERIA
+001,1001,2025-02-01,Baseline,Target Lesion,Partial Response,RECIST 1.1
+001,1001,2025-03-01,Week 8,Target Lesion,Partial Response,RECIST 1.1
+002,1001,2025-02-02,Baseline,Target Lesion,Stable Disease,RECIST 1.1
+002,1001,2025-03-02,Week 8,Target Lesion,Progressive Disease,RECIST 1.1
+003,1002,2025-02-03,Baseline,Target Lesion,Partial Response,RECIST 1.1
+003,1002,2025-03-03,Week 8,Target Lesion,Complete Response,RECIST 1.1
+004,1002,2025-02-04,Baseline,Target Lesion,Stable Disease,RECIST 1.1
+004,1002,2025-03-04,Week 8,Target Lesion,Stable Disease,RECIST 1.1
