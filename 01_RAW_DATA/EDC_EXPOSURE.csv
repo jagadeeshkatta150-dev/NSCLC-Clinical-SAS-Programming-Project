@@ -1,0 +1,8 @@
+
+PATIENT_NO,SITE_NO,DOSE_START_DATE,DOSE_END_DATE,DRUG_NAME,DOSE_AMOUNT,DOSE_UNIT,ROUTE
+001,1001,2025-01-05,2025-01-05,Investigational Drug,200,mg,Oral
+001,1001,2025-01-12,2025-01-12,Investigational Drug,200,mg,Oral
+002,1001,2025-01-06,2025-01-06,Standard Care,75,mg,Intravenous
+002,1001,2025-01-13,2025-01-13,Standard Care,75,mg,Intravenous
+003,1002,2025-01-07,2025-01-07,Investigational Drug,200,mg,Oral
+004,1002,2025-01-08,2025-01-08,Standard Care,75,mg,Intravenous
