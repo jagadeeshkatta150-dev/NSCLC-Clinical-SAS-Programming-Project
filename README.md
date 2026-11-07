@@ -124,10 +124,22 @@ The repository contains 68 SAS programming files covering:
 
 ## 10. Repository Structure
 
-```text
 NSCLC-Clinical-SAS-Programming-Project/
 │
 ├── 01_RAW_DATA/
+│
+├── 02_SDTM/
+│   ├── DATASETS/
+│   └── README.md
+│
+├── 03_ADAM/
+│   ├── DATASETS/
+│   └── README.md
+│
+├── 04_TLF/
+│   ├── TABLES/
+│   ├── FIGURES/
+│   └── LISTINGS/
 │
 ├── 001_PROJECT_INITIALIZATION.sas
 ├── 002_CREATE_SUBFOLDERS.sas
