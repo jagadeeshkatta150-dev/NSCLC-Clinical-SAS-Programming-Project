@@ -1,10 +1,10 @@
 
-*====================================================*/
-/* PROJECT: NSCLC PHASE III ONCOLOGY CLINICAL TRIAL   */
-/* PROGRAM: 057_QC_ADSL_TREATMENT_SAFETY_FLAGS        */
-/* PURPOSE: Independently validate ADSL treatment and */
-/*          safety population flags                   */
-/*====================================================*/
+/*==============================================================*/
+/* PROJECT: NSCLC PHASE III ONCOLOGY CLINICAL TRIAL              */
+/* PROGRAM: 057_QC_ADSL_TREATMENT_SAFETY_FLAGS                   */
+/* PURPOSE: Independently validate ADSL treatment and           */
+/*          safety population flags                              */
+/*==============================================================*/
 
 
 /* STEP 1: DERIVE EXPECTED EXPOSURE SUBJECTS */
@@ -33,26 +33,17 @@ proc sql;
 quit;
 
 
-/* STEP 2: DERIVE EXPECTED PLANNED TREATMENT */
+/* STEP 2: SORT EXPECTED EXPOSURE DATA */
 
-proc sort data=SDTM.DM_UPDATED
-          out=WORK.QC_DM_SORTED;
-
-    by USUBJID;
-
-run;
-
-
-/* STEP 3: SORT EXPOSURE SUMMARY */
-
-proc sort data=WORK.QC_EXPECTED_EXPOSURE;
+proc sort data=WORK.QC_EXPECTED_EXPOSURE
+          out=WORK.QC_EXPOSURE_SORTED;
 
     by USUBJID;
 
 run;
 
 
-/* STEP 4: MERGE EXPECTED DATA WITH ADSL */
+/* STEP 3: SORT ADSL DATA */
 
 proc sort data=ADAM.ADSL
           out=WORK.QC_ADSL_SORTED;
@@ -62,40 +53,45 @@ proc sort data=ADAM.ADSL
 run;
 
 
+/* STEP 4: MERGE EXPECTED EXPOSURE WITH ADSL */
+
 data WORK.QC_TREATMENT_COMPARE;
 
     merge WORK.QC_ADSL_SORTED(in=IN_ADSL)
-
-          WORK.QC_EXPECTED_EXPOSURE(in=IN_EXPOSURE);
+          WORK.QC_EXPOSURE_SORTED(in=IN_EXPOSURE);
 
     by USUBJID;
+
+    if IN_ADSL;
 
     length SAFETY_QC $12
            ACTUAL_TRT_QC $12;
 
-    if IN_ADSL then do;
+    /* SAFETY FLAG VALIDATION */
 
-        if IN_EXPOSURE and SAFFL="Y" then
-            SAFETY_QC="MATCH";
+    if IN_EXPOSURE and SAFFL="Y" then
+        SAFETY_QC="MATCH";
 
-        else if not IN_EXPOSURE and missing(SAFFL) then
-            SAFETY_QC="MATCH";
+    else if not IN_EXPOSURE and SAFFL="N" then
+        SAFETY_QC="MATCH";
 
-        else
-            SAFETY_QC="MISMATCH";
+    else
+        SAFETY_QC="MISMATCH";
 
-        if IN_EXPOSURE and TRT01A=EXPECTED_TRT01A then
-            ACTUAL_TRT_QC="MATCH";
 
-        else if not IN_EXPOSURE and missing(TRT01A) then
-            ACTUAL_TRT_QC="MATCH";
+    /* ACTUAL TREATMENT VALIDATION */
 
-        else
-            ACTUAL_TRT_QC="MISMATCH";
+    if IN_EXPOSURE and
+       not missing(EXPECTED_TRT01A) and
+       TRT01A=EXPECTED_TRT01A then
 
-    end;
+        ACTUAL_TRT_QC="MATCH";
 
-    if IN_ADSL;
+    else if not IN_EXPOSURE and missing(TRT01A) then
+        ACTUAL_TRT_QC="MATCH";
+
+    else
+        ACTUAL_TRT_QC="MISMATCH";
 
 run;
 
@@ -145,4 +141,34 @@ proc print data=QC.ADSL_TREATMENT_SAFETY_QC noobs;
 
 run;
 
+
+/* STEP 9: FINAL QC SUMMARY */
+
+title "FINAL ADSL TREATMENT AND SAFETY QC SUMMARY";
+
+proc sql;
+
+    select count(*) as TOTAL_SUBJECTS
+    from QC.ADSL_TREATMENT_SAFETY_QC;
+
+    select count(*) as SAFETY_MISMATCHES
+    from QC.ADSL_TREATMENT_SAFETY_QC
+    where SAFETY_QC="MISMATCH";
+
+    select count(*) as TREATMENT_MISMATCHES
+    from QC.ADSL_TREATMENT_SAFETY_QC
+    where ACTUAL_TRT_QC="MISMATCH";
+
+quit;
+
+
+/* RESET TITLE */
+
 title;
+
+
+
+   
+
+   
+
