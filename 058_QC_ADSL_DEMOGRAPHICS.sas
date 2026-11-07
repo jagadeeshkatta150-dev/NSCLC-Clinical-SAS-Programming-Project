@@ -1,5 +1,5 @@
 
-*====================================================*/
+/*====================================================*/
 /* PROJECT: NSCLC PHASE III ONCOLOGY CLINICAL TRIAL   */
 /* PROGRAM: 058_QC_ADSL_DEMOGRAPHICS                  */
 /* PURPOSE: Independently validate ADSL demographic   */
@@ -23,15 +23,15 @@ data WORK.QC_ADSL_DEMOGRAPHICS;
 
     set ADAM.ADSL;
 
-    length SEX_EXPECTED $1;
+    /* Derive source reconciliation keys */
 
-    SITE_NO = input(substr(USUBJID, 10, 4), 4.);
-    PATIENT_NO = input(substr(USUBJID, 15, 3), 3.);
-
-    if SEX="M" then SEX_EXPECTED="M";
-    else if SEX="F" then SEX_EXPECTED="F";
+    SITE_NO = input(strip(SITEID), 4.);
+    PATIENT_NO = input(strip(SUBJID), 3.);
 
 run;
+
+
+/* STEP 3: SORT ADSL DATA */
 
 proc sort data=WORK.QC_ADSL_DEMOGRAPHICS;
 
@@ -40,7 +40,7 @@ proc sort data=WORK.QC_ADSL_DEMOGRAPHICS;
 run;
 
 
-/* STEP 3: COMPARE RAW AND ADSL DEMOGRAPHICS */
+/* STEP 4: COMPARE RAW AND ADSL DEMOGRAPHICS */
 
 data QC.ADSL_DEMOGRAPHIC_QC;
 
@@ -53,35 +53,49 @@ data QC.ADSL_DEMOGRAPHIC_QC;
 
     if IN_RAW and IN_ADSL then do;
 
-        if AGE_YRS=AGE then AGE_QC="MATCH";
-        else AGE_QC="MISMATCH";
+        /* AGE VALIDATION */
 
-        if upcase(strip(GENDER))="MALE" and SEX="M" then
-    SEX_QC="MATCH";
+        if AGE_YRS = AGE then
+            AGE_QC = "MATCH";
+        else
+            AGE_QC = "MISMATCH";
 
-else if upcase(strip(GENDER))="FEMALE" and SEX="F" then
-    SEX_QC="MATCH";
 
-else
-    SEX_QC="MISMATCH";
-        if SITE_NO=input(substr(USUBJID,10,4),4.)
-            then SITE_QC="MATCH";
-        else SITE_QC="MISMATCH";
+        /* SEX VALIDATION */
+
+        if upcase(strip(GENDER)) = "MALE"
+           and SEX = "M" then
+            SEX_QC = "MATCH";
+
+        else if upcase(strip(GENDER)) = "FEMALE"
+                and SEX = "F" then
+            SEX_QC = "MATCH";
+
+        else
+            SEX_QC = "MISMATCH";
+
+
+        /* SITE VALIDATION */
+
+        if SITE_NO = input(strip(SITEID), 4.) then
+            SITE_QC = "MATCH";
+        else
+            SITE_QC = "MISMATCH";
 
     end;
 
     else do;
 
-        AGE_QC="NO MATCH";
-        SEX_QC="NO MATCH";
-        SITE_QC="NO MATCH";
+        AGE_QC = "NO MATCH";
+        SEX_QC = "NO MATCH";
+        SITE_QC = "NO MATCH";
 
     end;
 
 run;
 
 
-/* STEP 4: REVIEW AGE VALIDATION */
+/* STEP 5: REVIEW AGE VALIDATION */
 
 title "AGE VALIDATION";
 
@@ -92,7 +106,7 @@ proc freq data=QC.ADSL_DEMOGRAPHIC_QC;
 run;
 
 
-/* STEP 5: REVIEW SEX VALIDATION */
+/* STEP 6: REVIEW SEX VALIDATION */
 
 title "SEX VALIDATION";
 
@@ -103,7 +117,7 @@ proc freq data=QC.ADSL_DEMOGRAPHIC_QC;
 run;
 
 
-/* STEP 6: REVIEW SITE VALIDATION */
+/* STEP 7: REVIEW SITE VALIDATION */
 
 title "SITE VALIDATION";
 
@@ -114,7 +128,7 @@ proc freq data=QC.ADSL_DEMOGRAPHIC_QC;
 run;
 
 
-/* STEP 7: DISPLAY MISMATCH RECORDS */
+/* STEP 8: DISPLAY MISMATCH RECORDS */
 
 title "ADSL DEMOGRAPHIC QC MISMATCH REVIEW";
 
@@ -125,8 +139,43 @@ proc print data=QC.ADSL_DEMOGRAPHIC_QC noobs;
        or SITE_QC ne "MATCH";
 
     var USUBJID AGE_YRS AGE GENDER SEX
-        SITE_NO AGE_QC SEX_QC SITE_QC;
+        SITE_NO SITEID AGE_QC SEX_QC SITE_QC;
 
 run;
 
+
+/* STEP 9: FINAL QC SUMMARY */
+
+title "FINAL ADSL DEMOGRAPHIC QC SUMMARY";
+
+proc sql;
+
+    select count(*) as TOTAL_QC_RECORDS
+    from QC.ADSL_DEMOGRAPHIC_QC;
+
+    select count(*) as AGE_MISMATCHES
+    from QC.ADSL_DEMOGRAPHIC_QC
+    where AGE_QC = "MISMATCH";
+
+    select count(*) as SEX_MISMATCHES
+    from QC.ADSL_DEMOGRAPHIC_QC
+    where SEX_QC = "MISMATCH";
+
+    select count(*) as SITE_MISMATCHES
+    from QC.ADSL_DEMOGRAPHIC_QC
+    where SITE_QC = "MISMATCH";
+
+quit;
+
+
+/* STEP 10: CLEAR TITLES */
+
 title;
+
+
+   
+
+  
+
+        
+
