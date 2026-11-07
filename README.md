@@ -124,6 +124,9 @@ The repository contains 68 SAS programming files covering:
 
 ## 10. Repository Structure
 
+## 10. Repository Structure
+
+```text
 NSCLC-Clinical-SAS-Programming-Project/
 │
 ├── 01_RAW_DATA/
@@ -147,6 +150,7 @@ NSCLC-Clinical-SAS-Programming-Project/
 ├── 068_FINAL_TLF_GENERATION.sas
 │
 └── README.md
+```
 ```
 
 ## 11. Disclaimer
