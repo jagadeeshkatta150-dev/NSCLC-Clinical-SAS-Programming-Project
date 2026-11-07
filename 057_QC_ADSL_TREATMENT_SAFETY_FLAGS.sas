@@ -1,10 +1,10 @@
 
-/*==============================================================*/
-/* PROJECT: NSCLC PHASE III ONCOLOGY CLINICAL TRIAL              */
-/* PROGRAM: 057_QC_ADSL_TREATMENT_SAFETY_FLAGS                   */
-/* PURPOSE: Independently validate ADSL treatment and           */
-/*          safety population flags                              */
-/*==============================================================*/
+/*====================================================*/
+/* PROJECT: NSCLC PHASE III ONCOLOGY CLINICAL TRIAL   */
+/* PROGRAM: 057_QC_ADSL_TREATMENT_SAFETY_FLAGS        */
+/* PURPOSE: Independently validate ADSL treatment and */
+/*          safety population flags                   */
+/*====================================================*/
 
 
 /* STEP 1: DERIVE EXPECTED EXPOSURE SUBJECTS */
@@ -20,11 +20,13 @@ proc sql;
             put(SITE_NO, z4.),
             "-",
             put(PATIENT_NO, z3.)
-        ) as USUBJID length=30,
+        ) as USUBJID length=40,
 
-        max(DRUG_NAME) as EXPECTED_TRT01A length=100,
+        max(DRUG_NAME) as EXPECTED_TRT01A length=30,
 
-        count(*) as EXPOSURE_RECORDS
+        count(*) as EXPOSURE_RECORDS,
+
+        count(distinct DRUG_NAME) as DISTINCT_TREATMENTS
 
     from RAW.EXPOSURE
 
@@ -62,17 +64,17 @@ data WORK.QC_TREATMENT_COMPARE;
 
     by USUBJID;
 
-    if IN_ADSL;
-
     length SAFETY_QC $12
            ACTUAL_TRT_QC $12;
+
+    if IN_ADSL;
 
     /* SAFETY FLAG VALIDATION */
 
     if IN_EXPOSURE and SAFFL="Y" then
         SAFETY_QC="MATCH";
 
-    else if not IN_EXPOSURE and SAFFL="N" then
+    else if not IN_EXPOSURE and missing(SAFFL) then
         SAFETY_QC="MATCH";
 
     else
@@ -81,11 +83,17 @@ data WORK.QC_TREATMENT_COMPARE;
 
     /* ACTUAL TREATMENT VALIDATION */
 
-    if IN_EXPOSURE and
-       not missing(EXPECTED_TRT01A) and
-       TRT01A=EXPECTED_TRT01A then
+    if IN_EXPOSURE and DISTINCT_TREATMENTS=1 then do;
 
-        ACTUAL_TRT_QC="MATCH";
+        if TRT01A=EXPECTED_TRT01A then
+            ACTUAL_TRT_QC="MATCH";
+        else
+            ACTUAL_TRT_QC="MISMATCH";
+
+    end;
+
+    else if IN_EXPOSURE and DISTINCT_TREATMENTS>1 then
+        ACTUAL_TRT_QC="REVIEW";
 
     else if not IN_EXPOSURE and missing(TRT01A) then
         ACTUAL_TRT_QC="MATCH";
@@ -127,17 +135,17 @@ proc freq data=QC.ADSL_TREATMENT_SAFETY_QC;
 run;
 
 
-/* STEP 8: DISPLAY MISMATCHES */
+/* STEP 8: DISPLAY MISMATCHES AND REVIEW RECORDS */
 
-title "TREATMENT AND SAFETY QC MISMATCH REVIEW";
+title "TREATMENT AND SAFETY QC REVIEW";
 
 proc print data=QC.ADSL_TREATMENT_SAFETY_QC noobs;
 
     where SAFETY_QC="MISMATCH"
-       or ACTUAL_TRT_QC="MISMATCH";
+       or ACTUAL_TRT_QC in ("MISMATCH","REVIEW");
 
     var USUBJID SAFFL TRT01A EXPECTED_TRT01A
-        SAFETY_QC ACTUAL_TRT_QC;
+        DISTINCT_TREATMENTS SAFETY_QC ACTUAL_TRT_QC;
 
 run;
 
@@ -159,16 +167,13 @@ proc sql;
     from QC.ADSL_TREATMENT_SAFETY_QC
     where ACTUAL_TRT_QC="MISMATCH";
 
+    select count(*) as TREATMENT_REVIEW_RECORDS
+    from QC.ADSL_TREATMENT_SAFETY_QC
+    where ACTUAL_TRT_QC="REVIEW";
+
 quit;
 
 
-/* RESET TITLE */
+/* STEP 10: CLEAR TITLES */
 
 title;
-
-
-
-   
-
-   
-
